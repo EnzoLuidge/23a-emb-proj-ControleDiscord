@@ -9,3 +9,5 @@ O músculo do braço direito, por exemplo, pode ser utilizado para pressionar o 
 
 Quanto aos outputs, pode-se colocar Leds de cada cor das teclas do Guitar Hero, que são ativados conforme as teclas são pressionadas pelos músculos. 
 Esse sensor já tem led imbutido nele que é aceso quando recebe input, portanto, vamos incluí-lo no projeto também, podendo ser utilizado como debug.
+
+O sensor será ativado a partir da detecção da movimentação do músculo, que será enviado como um botão do teclado sendo pressionado, que ativará a nota no jogo Guitar Hero. Para isso, estabeleceremos um limite mínimo dessa movimentação muscular, que garantirá que o usuário quis pressionar o botão. 
