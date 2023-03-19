@@ -1,5 +1,5 @@
 # 23a-emb-proj-GuitarHero
- Projeto de criação de um controle para GuitarHero utilizando sensores de contração muscular.
+ Projeto de criação de um controle para Guitar Hero utilizando sensores de contração muscular.
 ## Autores:
 - Enzo Luidge
 - Rodrigo Anciães Patelli
