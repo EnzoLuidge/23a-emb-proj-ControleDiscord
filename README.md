@@ -14,3 +14,7 @@ Quanto aos outputs, pode-se colocar Leds de cada cor das teclas do Guitar Hero, 
 Esse sensor já tem led imbutido nele que é aceso quando recebe input, portanto, vamos incluí-lo no projeto também, podendo ser utilizado como debug.
 
 O sensor será ativado a partir da detecção da movimentação do músculo, que será enviado como um botão do teclado sendo pressionado, que ativará a nota no jogo Guitar Hero. Para isso, estabeleceremos um limite mínimo dessa movimentação muscular, que garantirá que o usuário quis pressionar o botão. 
+
+
+https://user-images.githubusercontent.com/81188402/226213531-74d4d2d4-6e38-4e48-b2fd-17a2aa6ffd12.mp4
+
