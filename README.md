@@ -23,4 +23,4 @@ Vídeo retirado de Product Showcase: MyoWare 2.0 https://www.youtube.com/watch?v
 
 ![image](https://user-images.githubusercontent.com/81188402/226377592-a3384047-56d9-4231-91b4-2f8e862fe552.png)
 
-Imagem de Guitar Hero 3, jogo para consoles e PC.
+Imagem de Guitar Hero 3, jogo para consoles e PC. Ilustra-se como serão feitos os leds de cada cor (verde,vermelho, amarelo, azul e laranja), que serão acesos ao pressionar da tecla/músculo, no tempo certo.
