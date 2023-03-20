@@ -20,3 +20,7 @@ O sensor será ativado a partir da detecção da movimentação do músculo, que
 https://user-images.githubusercontent.com/81188402/226213531-74d4d2d4-6e38-4e48-b2fd-17a2aa6ffd12.mp4
 
 Vídeo retirado de Product Showcase: MyoWare 2.0 https://www.youtube.com/watch?v=d1oUHqPa35I&t=724s
+
+![image](https://user-images.githubusercontent.com/81188402/226377592-a3384047-56d9-4231-91b4-2f8e862fe552.png)
+
+Imagem de Guitar Hero 3, jogo para consoles e PC.
