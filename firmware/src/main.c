@@ -19,17 +19,47 @@
 #define LED_IDX      8
 #define LED_IDX_MASK (1 << LED_IDX)
 
-// Botão
+// Botão VERDE
+#define BUT_PIO      PIOD
+#define BUT_PIO_ID   ID_PIOD
+#define BUT_IDX      11
+#define BUT_IDX_MASK (1 << BUT_IDX)
+
+// Botão AMARELO
+#define BUTAMARELO_PIO      PIOA
+#define BUTAMARELO_PIO_ID   ID_PIOA
+#define BUTAMARELO_IDX      6
+#define BUTAMARELO_IDX_MASK (1 << BUTAMARELO_IDX)
+
+// Botão VERMELHO
+#define BUTVERMELHO_PIO      PIOD
+#define BUTVERMELHO_PIO_ID   ID_PIOD
+#define BUTVERMELHO_IDX      26
+#define BUTVERMELHO_IDX_MASK (1 << BUTVERMELHO_IDX)
+
+// Botão AZUL
+#define BUTAZUL_PIO      PIOC
+#define BUTAZUL_PIO_ID   ID_PIOC
+#define BUTAZUL_IDX      19
+#define BUTAZUL_IDX_MASK (1 << BUTAZUL_IDX)
+
+/*
 #define BUT_PIO      PIOA
 #define BUT_PIO_ID   ID_PIOA
 #define BUT_IDX      11
-#define BUT_IDX_MASK (1 << BUT_IDX)
+#define BUT_IDX_MASK (1 << BUT_IDX)*/
+
+/*
+#define BUTVERDE_PIO      PIOA
+#define BUTVERDE_PIO_ID   ID_PIOA
+#define BUTVERDE_IDX      11
+#define BUTVERDE_IDX_MASK (1 << BUT_IDX)*/
 
 // usart (bluetooth ou serial)
 // Descomente para enviar dados
 // pela serial debug
 
-#define DEBUG_SERIAL
+//#define DEBUG_SERIAL
 
 #ifdef DEBUG_SERIAL
 #define USART_COM USART1
@@ -112,10 +142,16 @@ void io_init(void) {
 	// Ativa PIOs
 	pmc_enable_periph_clk(LED_PIO_ID);
 	pmc_enable_periph_clk(BUT_PIO_ID);
+	pmc_enable_periph_clk(BUTAMARELO_PIO_ID);
+	pmc_enable_periph_clk(BUTVERMELHO_PIO_ID);
+	pmc_enable_periph_clk(BUTAZUL_PIO_ID);
 
 	// Configura Pinos
 	pio_configure(LED_PIO, PIO_OUTPUT_0, LED_IDX_MASK, PIO_DEFAULT | PIO_DEBOUNCE);
 	pio_configure(BUT_PIO, PIO_INPUT, BUT_IDX_MASK, PIO_PULLUP);
+	pio_configure(BUTAMARELO_PIO, PIO_INPUT, BUT_IDX_MASK, PIO_PULLUP);
+	pio_configure(BUTVERMELHO_PIO, PIO_INPUT, BUT_IDX_MASK, PIO_PULLUP);
+	pio_configure(BUTAZUL_PIO, PIO_INPUT, BUT_IDX_MASK, PIO_PULLUP);
 }
 
 static void configure_console(void) {
@@ -198,10 +234,11 @@ void config_usart0(void) {
 int hc05_init(void) {
 	char buffer_rx[128];
 	usart_send_command(USART_COM, buffer_rx, 1000, "AT", 100);
+	
 	vTaskDelay( 500 / portTICK_PERIOD_MS);
 	usart_send_command(USART_COM, buffer_rx, 1000, "AT", 100);
 	vTaskDelay( 500 / portTICK_PERIOD_MS);
-	usart_send_command(USART_COM, buffer_rx, 1000, "AT+NAMEagoravai", 100);
+	usart_send_command(USART_COM, buffer_rx, 1000, "AT+NAMEDiscord", 100);
 	vTaskDelay( 500 / portTICK_PERIOD_MS);
 	usart_send_command(USART_COM, buffer_rx, 1000, "AT", 100);
 	vTaskDelay( 500 / portTICK_PERIOD_MS);
@@ -230,7 +267,17 @@ void task_bluetooth(void) {
 		// atualiza valor do botão
 		if(pio_get(BUT_PIO, PIO_INPUT, BUT_IDX_MASK) == 0) {
 			button1 = '1';
-		} else {
+	}
+	else if(pio_get(BUTAMARELO_PIO, PIO_INPUT, BUTAMARELO_IDX_MASK) == 0) {
+			button1 = '2';
+		} 
+		else if(pio_get(BUTVERMELHO_PIO, PIO_INPUT, BUTVERMELHO_IDX_MASK) == 0) {
+			button1 = '3';
+		} 
+		else if(pio_get(BUTAZUL_PIO, PIO_INPUT, BUTAZUL_IDX_MASK) == 0) {
+			button1 = '4';
+		} 
+		else {
 			button1 = '0';
 		}
 
