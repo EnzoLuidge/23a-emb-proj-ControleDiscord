@@ -18,7 +18,20 @@
 #define LED_PIO_ID   ID_PIOC
 #define LED_IDX      8
 #define LED_IDX_MASK (1 << LED_IDX)
+#define SW_PIO 		 PIOC 			   // periferico que controla o O SW
+#define SW_PIO_ID	 ID_PIOC  // ID do periférico PIOC (controla SW)
+#define SW_PIO_IDX	 13 			   // ID do SW no PIO
+#define SW_PIO_IDX_MASK  (1 << SW_PIO_IDX)   // Mascara para CONTROLARMOS o SW
 
+#define DT_PIO 		 PIOD 			   // periferico que controla o O DT
+#define DT_PIO_ID	 ID_PIOD  // ID do periférico PIOC (controla DT)
+#define DT_PIO_IDX	 11 			   // ID do DT no PIO
+#define DT_PIO_IDX_MASK  (1 << DT_PIO_IDX)   // Mascara para CONTROLARMOS o DT
+
+#define CLK_PIO 		 PIOD 			   // periferico que controla o O CLK
+#define CLK_PIO_ID	 ID_PIOD  // ID do periférico PIOC (controla CLK)
+#define CLK_PIO_IDX	 26 			   // ID do CLK no PIO
+#define CLK_PIO_IDX_MASK  (1 << CLK_PIO_IDX)   // Mascara para CONTROLARMOS o CLK
 // Botão VERDE
 #define BUT_PIO      PIOD
 #define BUT_PIO_ID   ID_PIOD
@@ -42,7 +55,11 @@
 #define BUTAZUL_PIO_ID   ID_PIOC
 #define BUTAZUL_IDX      19
 #define BUTAZUL_IDX_MASK (1 << BUTAZUL_IDX)
-
+void but1_callback(void);
+void but2_callback(void);
+void but3_callback(void);
+void but4_callback(void);
+volatile int inteiro;
 /*
 #define BUT_PIO      PIOA
 #define BUT_PIO_ID   ID_PIOA
@@ -86,7 +103,8 @@ extern void vApplicationIdleHook(void);
 extern void vApplicationTickHook(void);
 extern void vApplicationMallocFailedHook(void);
 extern void xPortSysTickHandler(void);
-
+// Queues
+QueueHandle_t xQueue;
 /************************************************************************/
 /* constants                                                            */
 /************************************************************************/
@@ -94,7 +112,42 @@ extern void xPortSysTickHandler(void);
 /************************************************************************/
 /* variaveis globais                                                    */
 /************************************************************************/
+void sw_callback(void){
+	
+	
+}
 
+void dt_callback(void){
+	
+
+	
+}
+
+void clk_callback(void){
+	
+	// se for borda de descida
+	
+	
+	
+}
+void but1_callback(void){
+	printf("1");
+	//xQueueSendFromISR(xQueue,1,NULL);
+}
+
+void but2_callback(void){
+	printf("2");
+	//xQueueSendFromISR(xQueue,2,NULL);
+}
+
+void but3_callback(void){
+	printf("3");
+	//xQueueSendFromISR(xQueue,3,NULL);
+}
+void but4_callback(void){
+	printf("4");
+	//xQueueSendFromISR(xQueue,4,NULL);
+}
 /************************************************************************/
 /* RTOS application HOOK                                                */
 /************************************************************************/
@@ -145,13 +198,123 @@ void io_init(void) {
 	pmc_enable_periph_clk(BUTAMARELO_PIO_ID);
 	pmc_enable_periph_clk(BUTVERMELHO_PIO_ID);
 	pmc_enable_periph_clk(BUTAZUL_PIO_ID);
+	
+	pio_set_input(BUT_PIO, BUT_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
+	pio_set_input(BUTAMARELO_PIO, BUTAMARELO_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
+	pio_set_input(BUTAZUL_PIO, BUTAZUL_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
+	pio_set_input(BUTVERMELHO_PIO, BUTVERMELHO_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
 
-	// Configura Pinos
-	pio_configure(LED_PIO, PIO_OUTPUT_0, LED_IDX_MASK, PIO_DEFAULT | PIO_DEBOUNCE);
-	pio_configure(BUT_PIO, PIO_INPUT, BUT_IDX_MASK, PIO_PULLUP);
-	pio_configure(BUTAMARELO_PIO, PIO_INPUT, BUT_IDX_MASK, PIO_PULLUP);
-	pio_configure(BUTVERMELHO_PIO, PIO_INPUT, BUT_IDX_MASK, PIO_PULLUP);
-	pio_configure(BUTAZUL_PIO, PIO_INPUT, BUT_IDX_MASK, PIO_PULLUP);
+	
+	pio_set_debounce_filter(BUT_PIO, BUT_IDX_MASK, 10);
+	pio_set_debounce_filter(BUTAMARELO_PIO, BUTAMARELO_IDX_MASK, 10);
+	pio_set_debounce_filter(BUTVERMELHO_PIO, BUTVERMELHO_IDX_MASK, 10);
+	pio_set_debounce_filter(BUTAZUL_PIO, BUTAZUL_IDX_MASK, 10);
+	
+	
+
+	// configura NVIC para receber interrupcoes do PIO do botão 1
+	// configura interrupção no pino referente ao botão 2
+	pio_handler_set(BUT_PIO, BUT_PIO_ID, BUT_IDX_MASK, PIO_IT_RISE_EDGE, but1_callback);
+
+	// habilita interrupção
+	pio_enable_interrupt(BUT_PIO, BUT_IDX_MASK);
+	// limpa interrupção
+	pio_get_interrupt_status(BUT_PIO);
+	
+	NVIC_EnableIRQ(BUT_PIO_ID);
+	NVIC_SetPriority(BUT_PIO_ID, 4);
+	
+	
+	// configura interrupção no pino referente ao botão 2
+	pio_handler_set(BUTVERMELHO_PIO, BUTVERMELHO_PIO_ID, BUTVERMELHO_IDX_MASK, PIO_IT_RISE_EDGE, but2_callback);
+	
+	
+	// habilita interrupção
+	pio_enable_interrupt(BUTVERMELHO_PIO, BUTVERMELHO_IDX_MASK);
+	
+	// limpa interrupção
+	pio_get_interrupt_status(BUTVERMELHO_PIO);
+	
+	// configura NVIC para receber interrupcoes do PIO do botão 2
+	NVIC_EnableIRQ(BUTVERMELHO_PIO_ID);
+	NVIC_SetPriority(BUTVERMELHO_PIO_ID, 4);
+	
+	// configura interrupção no pino referente ao botão 3
+	pio_handler_set(BUTAMARELO_PIO, BUTAMARELO_PIO_ID, BUTAMARELO_IDX_MASK, PIO_IT_RISE_EDGE, but3_callback);
+
+	// habilita interrupção
+	pio_enable_interrupt(BUTAMARELO_PIO, BUTAMARELO_IDX_MASK);
+	// limpa interrupção
+	pio_get_interrupt_status(BUTAMARELO_PIO);
+
+	// configura NVIC para receber interrupcoes do PIO do botão 3
+	NVIC_EnableIRQ(BUTAMARELO_PIO_ID);
+	NVIC_SetPriority(BUTAMARELO_PIO_ID, 4);
+	
+	// configura interrupção no pino referente ao botão 3
+	pio_handler_set(BUTAZUL_PIO, BUTAZUL_PIO_ID, BUTAZUL_IDX_MASK, PIO_IT_RISE_EDGE, but4_callback);
+
+	// habilita interrupção
+	pio_enable_interrupt(BUTAZUL_PIO, BUTAZUL_IDX_MASK);
+	// limpa interrupção
+	pio_get_interrupt_status(BUTAZUL_PIO);
+
+	// configura NVIC para receber interrupcoes do PIO do botão 3
+	NVIC_EnableIRQ(BUTAZUL_PIO_ID);
+	NVIC_SetPriority(BUTAZUL_PIO_ID, 4);
+	
+	/*
+	// configura o botão sw como entrada com pull-up e debounce
+	pmc_enable_periph_clk(SW_PIO_ID);
+	pio_set_input(SW_PIO, SW_PIO_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
+	pio_set_debounce_filter(SW_PIO, SW_PIO_IDX_MASK, 10);
+
+	// configura interrupção no pino referente ao botão sw
+	pio_handler_set(SW_PIO, SW_PIO_ID, SW_PIO_IDX_MASK, PIO_IT_EDGE, sw_callback);
+
+	// habilita interrupção
+	pio_enable_interrupt(SW_PIO, SW_PIO_IDX_MASK);
+	// limpa interrupção
+	pio_get_interrupt_status(SW_PIO);
+
+	// configura NVIC para receber interrupcoes do PIO do botão sw
+	NVIC_EnableIRQ(SW_PIO_ID);
+	NVIC_SetPriority(SW_PIO_ID, 4);
+
+	// configura o pino do dt como entrada 
+	pmc_enable_periph_clk(DT_PIO_ID);
+	pio_set_input(DT_PIO, DT_PIO_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
+	pio_set_debounce_filter(DT_PIO, DT_PIO_IDX_MASK, 60);
+
+	// configura o pino do clk como entrada
+	pmc_enable_periph_clk(CLK_PIO_ID);
+	pio_set_input(CLK_PIO, CLK_PIO_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
+	pio_set_debounce_filter(CLK_PIO, CLK_PIO_IDX_MASK, 60);
+
+	// configura interrupção no pino referente ao dt
+	pio_handler_set(DT_PIO, DT_PIO_ID, DT_PIO_IDX_MASK, PIO_IT_EDGE, dt_callback);
+
+	// habilita interrupção
+	pio_enable_interrupt(DT_PIO, DT_PIO_IDX_MASK);
+	// limpa interrupção
+	pio_get_interrupt_status(DT_PIO);
+
+	// configura NVIC para receber interrupcoes do PIO do dt
+	NVIC_EnableIRQ(DT_PIO_ID);
+	NVIC_SetPriority(DT_PIO_ID, 2);
+
+	// configura interrupção no pino referente ao clk
+	pio_handler_set(CLK_PIO, CLK_PIO_ID, CLK_PIO_IDX_MASK, PIO_IT_EDGE, clk_callback);
+
+	// habilita interrupção
+	pio_enable_interrupt(CLK_PIO, CLK_PIO_IDX_MASK);
+	// limpa interrupção
+	pio_get_interrupt_status(CLK_PIO);
+
+	// configura NVIC para receber interrupcoes do PIO do clk
+	NVIC_EnableIRQ(CLK_PIO_ID);
+	NVIC_SetPriority(CLK_PIO_ID, 2);
+	*/
 }
 
 static void configure_console(void) {
@@ -255,46 +418,32 @@ void task_bluetooth(void) {
 	printf("Inicializando HC05 \n");
 	config_usart0();
 	hc05_init();
-
+	printf("Inicializando IO\n");
 	// configura LEDs e Botões
 	io_init();
+	printf("Teste IO");
 
 	char button1 = '0';
 	char eof = 'X';
 
 	// Task não deve retornar.
 	while(1) {
-		// atualiza valor do botão
-		if(pio_get(BUT_PIO, PIO_INPUT, BUT_IDX_MASK) == 0) {
-			button1 = '1';
-	}
-	else if(pio_get(BUTAMARELO_PIO, PIO_INPUT, BUTAMARELO_IDX_MASK) == 0) {
-			button1 = '2';
-		} 
-		else if(pio_get(BUTVERMELHO_PIO, PIO_INPUT, BUTVERMELHO_IDX_MASK) == 0) {
-			button1 = '3';
-		} 
-		else if(pio_get(BUTAZUL_PIO, PIO_INPUT, BUTAZUL_IDX_MASK) == 0) {
-			button1 = '4';
-		} 
-		else {
-			button1 = '0';
-		}
-
-		// envia status botão
-		while(!usart_is_tx_ready(USART_COM)) {
-			vTaskDelay(10 / portTICK_PERIOD_MS);
-		}
-		usart_write(USART_COM, button1);
 		
-		// envia fim de pacote
-		while(!usart_is_tx_ready(USART_COM)) {
-			vTaskDelay(10 / portTICK_PERIOD_MS);
-		}
-		usart_write(USART_COM, eof);
+			// envia status botão
+			while(!usart_is_tx_ready(USART_COM)) {
+				vTaskDelay(10 / portTICK_PERIOD_MS);
+			}
+			usart_write(USART_COM, button1);
+			
+			// envia fim de pacote
+			while(!usart_is_tx_ready(USART_COM)) {
+				vTaskDelay(10 / portTICK_PERIOD_MS);
+			}
+			usart_write(USART_COM, eof);
 
-		// dorme por 500 ms
-		vTaskDelay(500 / portTICK_PERIOD_MS);
+			// dorme por 500 ms
+			vTaskDelay(500 / portTICK_PERIOD_MS);
+		
 	}
 }
 
@@ -306,6 +455,8 @@ int main(void) {
 	/* Initialize the SAM system */
 	sysclk_init();
 	board_init();
+	// Desativa WatchDog Timer
+	WDT->WDT_MR = WDT_MR_WDDIS;
 
 	configure_console();
 
