@@ -44,12 +44,13 @@
 #define BUTAMARELO_IDX      6
 #define BUTAMARELO_IDX_MASK (1 << BUTAMARELO_IDX)
 
+volatile int counter = 1;
 // Botão VERMELHO
 #define BUTVERMELHO_PIO      PIOD
 #define BUTVERMELHO_PIO_ID   ID_PIOD
 #define BUTVERMELHO_IDX      26
 #define BUTVERMELHO_IDX_MASK (1 << BUTVERMELHO_IDX)
-
+volatile char button1;
 // Botão AZUL
 #define BUTAZUL_PIO      PIOC
 #define BUTAZUL_PIO_ID   ID_PIOC
@@ -131,21 +132,21 @@ void clk_callback(void){
 	
 }
 void but1_callback(void){
-	printf("1");
+	button1='1';
 	//xQueueSendFromISR(xQueue,1,NULL);
 }
 
 void but2_callback(void){
-	printf("2");
+	button1='2';
 	//xQueueSendFromISR(xQueue,2,NULL);
 }
 
 void but3_callback(void){
-	printf("3");
+	button1='3';
 	//xQueueSendFromISR(xQueue,3,NULL);
 }
 void but4_callback(void){
-	printf("4");
+	button1='4';
 	//xQueueSendFromISR(xQueue,4,NULL);
 }
 /************************************************************************/
@@ -423,11 +424,27 @@ void task_bluetooth(void) {
 	io_init();
 	printf("Teste IO");
 
-	char button1 = '0';
+	button1 = '0';
 	char eof = 'X';
 
 	// Task não deve retornar.
 	while(1) {
+		if(pio_get(BUT_PIO, PIO_INPUT, BUT_IDX_MASK) == 0) {
+			button1 = '1';
+		} 
+		else if(pio_get(BUTAMARELO_PIO,PIO_INPUT,BUTAMARELO_IDX_MASK)==0){
+			button1='2';
+			}
+		else if(pio_get(BUTAZUL_PIO,PIO_INPUT,BUTAZUL_IDX_MASK)==0){
+			button1='3';
+			}
+		else if(pio_get(BUTVERMELHO_PIO,PIO_INPUT,BUTVERMELHO_IDX_MASK)==0){
+			button1='4';
+			}
+		else {
+			button1 = '0';
+		}
+		
 		
 			// envia status botão
 			while(!usart_is_tx_ready(USART_COM)) {
