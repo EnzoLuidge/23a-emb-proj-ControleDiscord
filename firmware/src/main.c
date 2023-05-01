@@ -107,7 +107,7 @@ typedef struct {
 static void config_AFEC_pot(Afec *afec, uint32_t afec_id, uint32_t afec_channel,
                             afec_callback_t callback);
 
-//#define DEBUG_SERIAL
+#define DEBUG_SERIAL
 
 #ifdef DEBUG_SERIAL
 #define USART_COM USART1
@@ -198,8 +198,8 @@ static void task_proc(void *pvParameters) {
     if (xQueueReceive(xQueueProc, &(adc), 1000)) {
       count++;
       sum += adc.value;
-      if (count == 18) {
-        adc.value = sum / 18;
+      if (count == 10) {
+        adc.value = sum / 10;
         count = 0;
         sum = 0;
         xQueueSendFromISR(xQueueADC, &adc, &xHigherPriorityTaskWoken);
@@ -368,6 +368,7 @@ void clk_callback(void){
 	
 }
 void but1_callback(void){
+	printf("but1_callback \r \n");
 	button1='1';
 	xQueueSendFromISR(xQueue,button1,NULL);
 }
@@ -686,10 +687,10 @@ void task_bluetooth(void) {
 		// desabilite isto se não estiver usando fila
 		if(xQueueReceive(xQueue, &button1, 0) == pdTRUE) {
 			printf("Botão: %c \n", button1);
-		}
-		
-		
-			// envia status botão
+
+
+
+						// envia status botão
 			while(!usart_is_tx_ready(USART_COM)) {
 				vTaskDelay(10 / portTICK_PERIOD_MS);
 			}
@@ -703,6 +704,9 @@ void task_bluetooth(void) {
 
 			// dorme por 500 ms
 			vTaskDelay(500 / portTICK_PERIOD_MS);
+		}
+		
+	
 		
 	}
 }
