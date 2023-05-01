@@ -198,8 +198,8 @@ static void task_proc(void *pvParameters) {
     if (xQueueReceive(xQueueProc, &(adc), 1000)) {
       count++;
       sum += adc.value;
-      if (count == 10) {
-        adc.value = sum / 10;
+      if (count == 18) {
+        adc.value = sum / 18;
         count = 0;
         sum = 0;
         xQueueSendFromISR(xQueueADC, &adc, &xHigherPriorityTaskWoken);
@@ -242,12 +242,12 @@ static void task_adc(void *pvParameters) {
   while (1) {
     if (xQueueReceive(xQueueADC, &(adc), 1000)) {
       printf("ADC: %d \n", adc);
-	  if (adc.value > lastadc.value) {
+	  if (adc.value - 50 > lastadc.value) {
 		printf("Subindo \n");
 		button1 = 6;
 		// enviar para a fila
 		xQueueSend(xQueue, &button1, 0);
-	  } else if (adc.value < lastadc.value) {
+	  } else if (adc.value + 50 < lastadc.value) {
 		printf("Descendo \n");
 		button1 = 7;
 		// enviar para a fila
