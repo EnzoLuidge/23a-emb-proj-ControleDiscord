@@ -244,12 +244,12 @@ static void task_adc(void *pvParameters) {
       printf("ADC: %d \n", adc);
 	  if (adc.value - 50 > lastadc.value) {
 		printf("Subindo \n");
-		button1 = 6;
+		button1 = '6';
 		// enviar para a fila
 		xQueueSend(xQueue, &button1, 0);
 	  } else if (adc.value + 50 < lastadc.value) {
 		printf("Descendo \n");
-		button1 = 7;
+		button1 = '7';
 		// enviar para a fila
 		xQueueSend(xQueue, &button1, 0);
 	  }
