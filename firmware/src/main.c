@@ -237,7 +237,7 @@ static void task_adc(void *pvParameters) {
 
   while (1) {
     if (xQueueReceive(xQueueADC, &(adc), 1000)) {
-      printf("ADC: %d \n", adc);
+      // printf("ADC: %d \n", adc);
 	  if (adc.value - 50 > lastadc.value) {
 		printf("Subindo \n");
 		button1 = '6';
@@ -681,26 +681,27 @@ void task_bluetooth(void) {
 		*/
 		// recebe status botão via fila
 		// desabilite isto se não estiver usando fila
+
+		button1 = '0';
+
 		if(xQueueReceive(xQueue, &button1, 0) == pdTRUE) {
 			printf("Botão: %c \n", button1);
+		}
 
-
-
-			// envia status botão
-			while(!usart_is_tx_ready(USART_COM)) {
+					// envia status botão
+		while(!usart_is_tx_ready(USART_COM)) {
 				vTaskDelay(10 / portTICK_PERIOD_MS);
 			}
 			usart_write(USART_COM, button1);
 			
 			// envia fim de pacote
-			while(!usart_is_tx_ready(USART_COM)) {
+		while(!usart_is_tx_ready(USART_COM)) {
 				vTaskDelay(10 / portTICK_PERIOD_MS);
 			}
 			usart_write(USART_COM, eof);
 
 			// dorme por 500 ms
-			vTaskDelay(500 / portTICK_PERIOD_MS);
-		}
+		vTaskDelay(500 / portTICK_PERIOD_MS);
 		
 	
 		
