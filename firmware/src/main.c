@@ -56,10 +56,6 @@ volatile char button1;
 #define BUTAZUL_PIO_ID   ID_PIOC
 #define BUTAZUL_IDX      19
 #define BUTAZUL_IDX_MASK (1 << BUTAZUL_IDX)
-void but1_callback(void);
-void but2_callback(void);
-void but3_callback(void);
-void but4_callback(void);
 volatile int inteiro;
 /*
 #define BUT_PIO      PIOA
@@ -356,7 +352,7 @@ void clk_callback(void){
 		if (flag_dt == 1){
 			printf("giro anti-horario \r \n");
 			button1 = '7';
-			xQueueSendFromISR(xQueue,button1,NULL);
+			xQueueSendFromISR(xQueue,&button1,NULL);
 		}
 	}
 	else{
@@ -370,21 +366,21 @@ void clk_callback(void){
 void but1_callback(void){
 	printf("but1_callback \r \n");
 	button1='1';
-	xQueueSendFromISR(xQueue,button1,NULL);
+	xQueueSendFromISR(xQueue,&button1,NULL);
 }
 
 void but2_callback(void){
 	button1='2';
-	xQueueSendFromISR(xQueue,button1,NULL);
+	xQueueSendFromISR(xQueue,&button1,NULL);
 }
 
 void but3_callback(void){
 	button1='3';
-	xQueueSendFromISR(xQueue,button1,NULL);
+	xQueueSendFromISR(xQueue,&button1,NULL);
 }
 void but4_callback(void){
 	button1='4';
-	xQueueSendFromISR(xQueue,button1,NULL);
+	xQueueSendFromISR(xQueue,&button1,NULL);
 }
 /************************************************************************/
 /* RTOS application HOOK                                                */
@@ -690,7 +686,7 @@ void task_bluetooth(void) {
 
 
 
-						// envia status botão
+			// envia status botão
 			while(!usart_is_tx_ready(USART_COM)) {
 				vTaskDelay(10 / portTICK_PERIOD_MS);
 			}
