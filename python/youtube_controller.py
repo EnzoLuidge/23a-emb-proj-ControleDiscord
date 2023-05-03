@@ -69,6 +69,8 @@ class SerialControllerInterface:
             logging.info("Sending press")
             # aumentar volume
             self.currentVolumeDb = volume.GetMasterVolumeLevel()
+            if self.currentVolumeDb + self.currentVolumeDb*0.3 > 0:
+                self.currentVolumeDb = 0
             print(self.currentVolumeDb)
             volume.SetMasterVolumeLevel(self.currentVolumeDb + self.currentVolumeDb*0.3, None)
 
@@ -77,6 +79,8 @@ class SerialControllerInterface:
             # diminuir volume
             self.currentVolumeDb = volume.GetMasterVolumeLevel()
             print(self.currentVolumeDb)
+            if self.currentVolumeDb - self.currentVolumeDb*0.3 < -50:
+                self.currentVolumeDb = -50
             volume.SetMasterVolumeLevel(self.currentVolumeDb - self.currentVolumeDb*0.3, None)
 
         elif data == b'0':
