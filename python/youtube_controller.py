@@ -3,10 +3,25 @@ import serial
 import argparse
 import time
 import logging
+from ctypes import POINTER, cast
+from comtypes import CLSCTX_ALL
+from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+
+devices = AudioUtilities.GetSpeakers()
+interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+volume = cast(interface, POINTER(IAudioEndpointVolume))
+volume.SetMasterVolumeLevel(-10, None)
 
 class MyControllerMap:
     def __init__(self):
-        self.button = {'A': 'L'} # Fast forward (10 seg) pro Youtube
+        self.button = {'A': 'L', # Mute
+                       'B': 'A', # Deafen
+                       'C': 'B', # decline call
+                       'D': 'C', # ansewer call
+                       'E': 'D' # Trocar de aba
+                       }
+
+#pyautogui.hotkey('ctrl', 'shift', 'M')
 
 class SerialControllerInterface:
     # Protocolo
@@ -31,13 +46,41 @@ class SerialControllerInterface:
         logging.debug("Received DATA: {}".format(data))
 
         if data == b'1':
-            print("datab1")
-            logging.info("KEYDOWN A")
-            pyautogui.keyDown(self.mapping.button['A'])
+            logging.info("Sending press")
+            pyautogui.hotkey('ctrl', 'shift', 'M')
+
+        elif data == b'2':
+            logging.info("Sending press")
+            pyautogui.hotkey('ctrl', 'shift', 'D')
+
+        elif data == b'3':
+            logging.info("Sending press")
+            pyautogui.hotkey('escape')
+
+        elif data == b'4':
+            logging.info("Sending press")
+            pyautogui.hotkey('ctrl', 'enter')
+
+        elif data == b'5':
+            logging.info("Sending press")
+            pyautogui.keyDown(self.mapping.button['E'])
+
+        elif data == b'6':
+            logging.info("Sending press")
+            # aumentar volume
+            self.currentVolumeDb = volume.GetMasterVolumeLevel()
+            print(self.currentVolumeDb)
+            volume.SetMasterVolumeLevel(self.currentVolumeDb + self.currentVolumeDb*0.3, None)
+
+        elif data == b'7':
+            logging.info("Sending press")
+            # diminuir volume
+            self.currentVolumeDb = volume.GetMasterVolumeLevel()
+            print(self.currentVolumeDb)
+            volume.SetMasterVolumeLevel(self.currentVolumeDb - self.currentVolumeDb*0.3, None)
+
         elif data == b'0':
-            print("datab0")
-            logging.info("KEYUP A")
-            pyautogui.keyUp(self.mapping.button['A'])
+            logging.info("Sending release")
 
         self.incoming = self.ser.read()
 
