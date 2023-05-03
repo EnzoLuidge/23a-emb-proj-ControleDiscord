@@ -63,7 +63,7 @@ class SerialControllerInterface:
 
         elif data == b'5':
             logging.info("Sending press")
-            pyautogui.keyDown(self.mapping.button['E'])
+            pyautogui.keyDown(self.mapping.button['E']) # Não faz nada e nem existe o botão E na interface do discord
 
         elif data == b'6':
             logging.info("Sending press")
