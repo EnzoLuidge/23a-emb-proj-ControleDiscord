@@ -18,6 +18,8 @@
 #define LED_PIO_ID   ID_PIOC
 #define LED_IDX      8
 #define LED_IDX_MASK (1 << LED_IDX)
+
+/*
 #define SW_PIO 		 PIOC 			   // periferico que controla o O SW
 #define SW_PIO_ID	 ID_PIOC  // ID do periférico PIOC (controla SW)
 #define SW_PIO_IDX	 13 			   // ID do SW no PIO
@@ -32,6 +34,8 @@
 #define CLK_PIO_ID	 ID_PIOA  // ID do periférico PIOC (controla CLK)
 #define CLK_PIO_IDX	 9 			   // ID do CLK no PIO
 #define CLK_PIO_IDX_MASK  (1 << CLK_PIO_IDX)   // Mascara para CONTROLARMOS o CLK
+*/
+
 // Botão VERDE
 #define BUT_PIO      PIOD
 #define BUT_PIO_ID   ID_PIOD
@@ -201,7 +205,7 @@ static void task_proc(void *pvParameters) {
         xQueueSendFromISR(xQueueADC, &adc, &xHigherPriorityTaskWoken);
       }
     } else {
-      printf("Nao chegou um novo dado em 1 segundo em proc");
+      // //printf("Nao chegou um novo dado em 1 segundo em proc");
     }
   }
 }
@@ -237,21 +241,21 @@ static void task_adc(void *pvParameters) {
 
   while (1) {
     if (xQueueReceive(xQueueADC, &(adc), 1000)) {
-      // printf("ADC: %d \n", adc);
+      // //printf("ADC: %d \n", adc);
 	  if (adc.value - 50 > lastadc.value) {
-		printf("Subindo \n");
+		//printf("Subindo \n");
 		button1 = '6';
 		// enviar para a fila
 		xQueueSend(xQueue, &button1, 0);
 	  } else if (adc.value + 50 < lastadc.value) {
-		printf("Descendo \n");
+		//printf("Descendo \n");
 		button1 = '7';
 		// enviar para a fila
 		xQueueSend(xQueue, &button1, 0);
 	  }
 	  lastadc.value = adc.value;
     } else {
-      printf("Nao chegou um novo dado em 1 segundo");
+      //printf("Nao chegou um novo dado em 1 segundo");
     }
   }
 }
@@ -308,7 +312,7 @@ static void config_AFEC_pot(Afec *afec, uint32_t afec_id, uint32_t afec_channel,
 
 
 
-
+/*
 
 void sw_callback(void){
 
@@ -322,65 +326,56 @@ void sw_callback(void){
 	
 	
 }
-
 void dt_callback(void){
-	// if fall edge print a test string
 	if (flag_dt == 0){
-		//printf("dt_callback \r \n");
 		flag_dt = 1;
 		if (flag_clk == 1){
-			printf("giro horario \r \n");
 			button1 = '6';
 			xQueueSendFromISR(xQueue,button1,NULL);
 		}
 	}
 	else{
-		//printf("dt_callbackSubiu \r \n");
 		flag_dt = 0;
 	}	
-
-	
 }
-
 void clk_callback(void){
 	
 	// se for borda de descida
 
 	if (flag_clk == 0){
-		//printf("clk_callback \r \n");
 		flag_clk = 1;
 		if (flag_dt == 1){
-			printf("giro anti-horario \r \n");
 			button1 = '7';
 			xQueueSendFromISR(xQueue,&button1,NULL);
 		}
 	}
 	else{
-		//printf("clk_callbackSubiu \r \n");
 		flag_clk = 0;
 	}
-	
-	
-	
 }
+
+*/
 void but1_callback(void){
-	printf("but1_callback \r \n");
-	button1='1';
-	xQueueSendFromISR(xQueue,&button1,NULL);
+	char button;
+	button='1';
+	xQueueSendFromISR(xQueue,&button,NULL);
 }
 
 void but2_callback(void){
-	button1='2';
-	xQueueSendFromISR(xQueue,&button1,NULL);
+	char button;
+	button='2';
+	xQueueSendFromISR(xQueue,&button,NULL);
 }
 
 void but3_callback(void){
-	button1='3';
-	xQueueSendFromISR(xQueue,&button1,NULL);
+	char button;
+	button='3';
+	xQueueSendFromISR(xQueue,&button,NULL);
 }
 void but4_callback(void){
-	button1='4';
-	xQueueSendFromISR(xQueue,&button1,NULL);
+	char button;
+	button='4';
+	xQueueSendFromISR(xQueue,&button,NULL);
 }
 /************************************************************************/
 /* RTOS application HOOK                                                */
@@ -497,7 +492,7 @@ void io_init(void) {
 	NVIC_EnableIRQ(BUTAZUL_PIO_ID);
 	NVIC_SetPriority(BUTAZUL_PIO_ID, 4);
 	
-	
+	/*
 	// configura o botão sw como entrada com pull-up e debounce
 	pmc_enable_periph_clk(SW_PIO_ID);
 	pio_set_input(SW_PIO, SW_PIO_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
@@ -510,7 +505,8 @@ void io_init(void) {
 	pio_enable_interrupt(SW_PIO, SW_PIO_IDX_MASK);
 	// limpa interrupção
 	pio_get_interrupt_status(SW_PIO);
-
+	*/
+	/*
 	// configura NVIC para receber interrupcoes do PIO do botão sw
 	NVIC_EnableIRQ(SW_PIO_ID);
 	NVIC_SetPriority(SW_PIO_ID, 4);
@@ -548,7 +544,7 @@ void io_init(void) {
 	// configura NVIC para receber interrupcoes do PIO do clk
 	NVIC_EnableIRQ(CLK_PIO_ID);
 	NVIC_SetPriority(CLK_PIO_ID, 2);
-	
+	*/
 }
 
 static void configure_console(void) {
@@ -570,7 +566,7 @@ static void configure_console(void) {
 	#if defined(__GNUC__)
 	setbuf(stdout, NULL);
 	#else
-	/* Already the case in IAR's Normal DLIB default configuration: printf()
+	/* Already the case in IAR's Normal DLIB default configuration: //printf()
 	* emits one character at a time.
 	*/
 	#endif
@@ -662,6 +658,7 @@ void task_bluetooth(void) {
 
 	// Task não deve retornar.
 	while(1) {
+		
 		/*
 		if(pio_get(BUT_PIO, PIO_INPUT, BUT_IDX_MASK) == 0) {
 			button1 = '1';
@@ -685,7 +682,7 @@ void task_bluetooth(void) {
 		button1 = '0';
 
 		if(xQueueReceive(xQueue, &button1, 0) == pdTRUE) {
-			printf("Botão: %c \n", button1);
+			//printf("Botão: %c \n", button1);
 		}
 
 					// envia status botão
