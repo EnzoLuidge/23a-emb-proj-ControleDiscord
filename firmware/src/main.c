@@ -1,40 +1,12 @@
-/************************************************************************
-* 5 semestre - Eng. da Computao - Insper
-*
-* 2021 - Exemplo com HC05 com RTOS
-*
-*/
-
 #include <asf.h>
 #include "conf_board.h"
 #include <string.h>
-
-/************************************************************************/
-/* defines                                                              */
-/************************************************************************/
 
 // LEDs
 #define LED_PIO      PIOC
 #define LED_PIO_ID   ID_PIOC
 #define LED_IDX      8
 #define LED_IDX_MASK (1 << LED_IDX)
-
-/*
-#define SW_PIO 		 PIOC 			   // periferico que controla o O SW
-#define SW_PIO_ID	 ID_PIOC  // ID do periférico PIOC (controla SW)
-#define SW_PIO_IDX	 13 			   // ID do SW no PIO
-#define SW_PIO_IDX_MASK  (1 << SW_PIO_IDX)   // Mascara para CONTROLARMOS o SW
-
-#define DT_PIO 		 PIOD 			   // periferico que controla o O DT
-#define DT_PIO_ID	 ID_PIOD  // ID do periférico PIOC (controla DT)
-#define DT_PIO_IDX	 28			   // ID do DT no PIO
-#define DT_PIO_IDX_MASK  (1 << DT_PIO_IDX)   // Mascara para CONTROLARMOS o DT
-
-#define CLK_PIO 	 PIOA 			   // periferico que controla o O CLK
-#define CLK_PIO_ID	 ID_PIOA  // ID do periférico PIOC (controla CLK)
-#define CLK_PIO_IDX	 9 			   // ID do CLK no PIO
-#define CLK_PIO_IDX_MASK  (1 << CLK_PIO_IDX)   // Mascara para CONTROLARMOS o CLK
-*/
 
 // Botão VERDE
 #define BUT_PIO      PIOD
@@ -49,6 +21,7 @@
 #define BUTAMARELO_IDX_MASK (1 << BUTAMARELO_IDX)
 
 volatile int counter = 1;
+
 // Botão VERMELHO
 #define BUTVERMELHO_PIO      PIOD
 #define BUTVERMELHO_PIO_ID   ID_PIOD
@@ -56,22 +29,12 @@ volatile int counter = 1;
 #define BUTVERMELHO_IDX_MASK (1 << BUTVERMELHO_IDX)
 volatile char button1;
 // Botão AZUL
+
 #define BUTAZUL_PIO      PIOC
 #define BUTAZUL_PIO_ID   ID_PIOC
 #define BUTAZUL_IDX      19
 #define BUTAZUL_IDX_MASK (1 << BUTAZUL_IDX)
 volatile int inteiro;
-/*
-#define BUT_PIO      PIOA
-#define BUT_PIO_ID   ID_PIOA
-#define BUT_IDX      11
-#define BUT_IDX_MASK (1 << BUT_IDX)*/
-
-/*
-#define BUTVERDE_PIO      PIOA
-#define BUTVERDE_PIO_ID   ID_PIOA
-#define BUTVERDE_IDX      11
-#define BUTVERDE_IDX_MASK (1 << BUT_IDX)*/
 
 // usart (bluetooth ou serial)
 // Descomente para enviar dados
@@ -84,19 +47,13 @@ volatile int inteiro;
 #define AFEC_POT_ID ID_AFEC0
 #define AFEC_POT_CHANNEL 0 // Canal do pino PD30
 
-/************************************************************************/
-/* RTOS                                                                */
-/************************************************************************/
-
 #define TASK_ADC_STACK_SIZE (1024 * 10 / sizeof(portSTACK_TYPE))
 #define TASK_ADC_STACK_PRIORITY (tskIDLE_PRIORITY)
 #define TASK_PROC_STACK_SIZE (1024 * 10 / sizeof(portSTACK_TYPE))
 #define TASK_PROC_STACK_PRIORITY (tskIDLE_PRIORITY)
 
-
 TimerHandle_t xTimer;
 
-/** Queue for msg log send data */
 QueueHandle_t xQueueADC;
 QueueHandle_t xQueueProc;
 
@@ -106,6 +63,7 @@ typedef struct {
 
 static void config_AFEC_pot(Afec *afec, uint32_t afec_id, uint32_t afec_channel,
                             afec_callback_t callback);
+volatile char flag_mute = 0;
 
 //#define DEBUG_SERIAL
 
@@ -117,16 +75,8 @@ static void config_AFEC_pot(Afec *afec, uint32_t afec_id, uint32_t afec_channel,
 #define USART_COM_ID ID_USART0
 #endif
 
-/************************************************************************/
-/* RTOS                                                                 */
-/************************************************************************/
-
 #define TASK_BLUETOOTH_STACK_SIZE            (4096/sizeof(portSTACK_TYPE))
 #define TASK_BLUETOOTH_STACK_PRIORITY        (tskIDLE_PRIORITY)
-
-/************************************************************************/
-/* prototypes                                                           */
-/************************************************************************/
 
 extern void vApplicationStackOverflowHook(xTaskHandle *pxTask,
 signed char *pcTaskName);
@@ -134,18 +84,12 @@ extern void vApplicationIdleHook(void);
 extern void vApplicationTickHook(void);
 extern void vApplicationMallocFailedHook(void);
 extern void xPortSysTickHandler(void);
-// Queues
-QueueHandle_t xQueue;
-/************************************************************************/
-/* constants                                                            */
-/************************************************************************/
 
-/************************************************************************/
-/* variaveis globais                                                    */
+QueueHandle_t xQueue;
+                                                
 volatile flag_sw = 0;
 volatile flag_dt = 0;
 volatile flag_clk = 0;
-/************************************************************************/
 
 static void AFEC_pot_callback(void) {
   adcData adc;
@@ -153,10 +97,6 @@ static void AFEC_pot_callback(void) {
   BaseType_t xHigherPriorityTaskWoken = pdTRUE;
   xQueueSendFromISR(xQueueProc, &adc, &xHigherPriorityTaskWoken);
 }
-
-/************************************************************************/
-/* TASKS                                                                */
-/************************************************************************/
 
 void vTimerCallback(TimerHandle_t xTimer) {
   /* Selecina canal e inicializa conversão */
@@ -167,31 +107,14 @@ void vTimerCallback(TimerHandle_t xTimer) {
 static void task_proc(void *pvParameters) {
     // configura ADC e TC para controlar a leitura
   config_AFEC_pot(AFEC_POT, AFEC_POT_ID, AFEC_POT_CHANNEL, AFEC_pot_callback);
-
-  xTimer = xTimerCreate(/* Just a text name, not used by the RTOS
-                        kernel. */
-                        "Timer",
-                        /* The timer period in ticks, must be
-                        greater than 0. */
-                        100,
-                        /* The timers will auto-reload themselves
-                        when they expire. */
-                        pdTRUE,
-                        /* The ID is used to store a count of the
-                        number of times the timer has expired, which
-                        is initialised to 0. */
-                        (void *)0,
-                        /* Timer callback */
-                        vTimerCallback);
+  xTimer = xTimerCreate("Timer", 100, pdTRUE, (void *)0, vTimerCallback);
   xTimerStart(xTimer, 0);
-
   // variável para recever dados da fila
   adcData adc;
   // variavel para guardar quantidade de dados
   uint32_t count = 0;
   // variavel para guardar a soma dos dados
   uint32_t sum = 0;
-  
   BaseType_t xHigherPriorityTaskWoken = pdTRUE;
   // recebendo dados da fila
   while (1) {
@@ -210,35 +133,16 @@ static void task_proc(void *pvParameters) {
   }
 }
 
-
 static void task_adc(void *pvParameters) {
-
   // configura ADC e TC para controlar a leitura
   config_AFEC_pot(AFEC_POT, AFEC_POT_ID, AFEC_POT_CHANNEL, AFEC_pot_callback);
-
-  xTimer = xTimerCreate(/* Just a text name, not used by the RTOS
-                        kernel. */
-                        "Timer",
-                        /* The timer period in ticks, must be
-                        greater than 0. */
-                        100,
-                        /* The timers will auto-reload themselves
-                        when they expire. */
-                        pdTRUE,
-                        /* The ID is used to store a count of the
-                        number of times the timer has expired, which
-                        is initialised to 0. */
-                        (void *)0,
-                        /* Timer callback */
-                        vTimerCallback);
+  xTimer = xTimerCreate("Timer", 100, pdTRUE, (void *)0, vTimerCallback);
   xTimerStart(xTimer, 0);
-
   // variável para recever dados da fila
   adcData adc;
   adcData lastadc;
   // incializa o valor de lastadc para 0
   lastadc.value = 0;
-
   while (1) {
     if (xQueueReceive(xQueueADC, &(adc), 1000)) {
       //printf("ADC: %d \n", adc);
@@ -262,101 +166,49 @@ static void task_adc(void *pvParameters) {
 }
 
 
-static void config_AFEC_pot(Afec *afec, uint32_t afec_id, uint32_t afec_channel,
-                            afec_callback_t callback) {
+static void config_AFEC_pot(Afec *afec, uint32_t afec_id, uint32_t afec_channel, afec_callback_t callback) {
   /*************************************
    * Ativa e configura AFEC
    *************************************/
   /* Ativa AFEC - 0 */
   afec_enable(afec);
-
   /* struct de configuracao do AFEC */
   struct afec_config afec_cfg;
-
   /* Carrega parametros padrao */
   afec_get_config_defaults(&afec_cfg);
-
   /* Configura AFEC */
   afec_init(afec, &afec_cfg);
-
   /* Configura trigger por software */
   afec_set_trigger(afec, AFEC_TRIG_SW);
-
   /*** Configuracao específica do canal AFEC ***/
   struct afec_ch_config afec_ch_cfg;
   afec_ch_get_config_defaults(&afec_ch_cfg);
   afec_ch_cfg.gain = AFEC_GAINVALUE_0;
   afec_ch_set_config(afec, afec_channel, &afec_ch_cfg);
-
   /*
   * Calibracao:
   * Because the internal ADC offset is 0x200, it should cancel it and shift
   down to 0.
   */
   afec_channel_set_analog_offset(afec, afec_channel, 0x200);
-
   /***  Configura sensor de temperatura ***/
   struct afec_temp_sensor_config afec_temp_sensor_cfg;
-
   afec_temp_sensor_get_config_defaults(&afec_temp_sensor_cfg);
   afec_temp_sensor_set_config(afec, &afec_temp_sensor_cfg);
-
   /* configura IRQ */
   afec_set_callback(afec, afec_channel, callback, 1);
   NVIC_SetPriority(afec_id, 4);
   NVIC_EnableIRQ(afec_id);
 }
 
-
-
-
-
-
-
-/*
-
-void sw_callback(void){
-
-	if (flag_sw == 0){
-		flag_sw = 1;
-	}else{
-		flag_sw = 0;
-		button1 = '5';
-		xQueueSendFromISR(xQueue,button1,NULL);
-		}
-	
-	
-}
-void dt_callback(void){
-	if (flag_dt == 0){
-		flag_dt = 1;
-		if (flag_clk == 1){
-			button1 = '6';
-			xQueueSendFromISR(xQueue,button1,NULL);
-		}
-	}
-	else{
-		flag_dt = 0;
-	}	
-}
-void clk_callback(void){
-	
-	// se for borda de descida
-
-	if (flag_clk == 0){
-		flag_clk = 1;
-		if (flag_dt == 1){
-			button1 = '7';
-			xQueueSendFromISR(xQueue,&button1,NULL);
-		}
-	}
-	else{
-		flag_clk = 0;
-	}
-}
-
-*/
 void but1_callback(void){
+	 if (flag_mute == 0) {
+	 	pio_clear(LED_PIO, LED_IDX_MASK);
+	 	flag_mute = 1;
+	 } else {
+	 	pio_set(LED_PIO, LED_IDX_MASK);
+	 	flag_mute = 0;
+	 }
 	char button;
 	button='1';
 	xQueueSendFromISR(xQueue,&button,NULL);
@@ -378,52 +230,24 @@ void but4_callback(void){
 	button='4';
 	xQueueSendFromISR(xQueue,&button,NULL);
 }
-/************************************************************************/
-/* RTOS application HOOK                                                */
-/************************************************************************/
 
-/* Called if stack overflow during execution */
-extern void vApplicationStackOverflowHook(xTaskHandle *pxTask,
-signed char *pcTaskName) {
+extern void vApplicationStackOverflowHook(xTaskHandle *pxTask, signed char *pcTaskName) {
 	printf("stack overflow %x %s\r\n", pxTask, (portCHAR *)pcTaskName);
-	/* If the parameters have been corrupted then inspect pxCurrentTCB to
-	* identify which task has overflowed its stack.
-	*/
 	for (;;) {
 	}
 }
-
-/* This function is called by FreeRTOS idle task */
 extern void vApplicationIdleHook(void) {
 	pmc_sleep(SAM_PM_SMODE_SLEEP_WFI);
 }
-
-/* This function is called by FreeRTOS each tick */
 extern void vApplicationTickHook(void) { }
-
 extern void vApplicationMallocFailedHook(void) {
-	/* Called if a call to pvPortMalloc() fails because there is insufficient
-	free memory available in the FreeRTOS heap.  pvPortMalloc() is called
-	internally by FreeRTOS API functions that create tasks, queues, software
-	timers, and semaphores.  The size of the FreeRTOS heap is set by the
-	configTOTAL_HEAP_SIZE configuration constant in FreeRTOSConfig.h. */
-
-	/* Force an assert. */
 	configASSERT( ( volatile void * ) NULL );
 }
 
-/************************************************************************/
-/* handlers / callbacks                                                 */
-/************************************************************************/
-
-/************************************************************************/
-/* funcoes                                                              */
-/************************************************************************/
-
 void io_init(void) {
-
 	// Ativa PIOs
-	pmc_enable_periph_clk(LED_PIO_ID);
+	pio_configure(LED_PIO, PIO_OUTPUT_1, LED_IDX_MASK, PIO_DEFAULT);
+	
 	pmc_enable_periph_clk(BUT_PIO_ID);
 	pmc_enable_periph_clk(BUTAMARELO_PIO_ID);
 	pmc_enable_periph_clk(BUTVERMELHO_PIO_ID);
@@ -434,118 +258,34 @@ void io_init(void) {
 	pio_set_input(BUTAZUL_PIO, BUTAZUL_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
 	pio_set_input(BUTVERMELHO_PIO, BUTVERMELHO_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
 
-	
 	pio_set_debounce_filter(BUT_PIO, BUT_IDX_MASK, 10);
 	pio_set_debounce_filter(BUTAMARELO_PIO, BUTAMARELO_IDX_MASK, 10);
 	pio_set_debounce_filter(BUTVERMELHO_PIO, BUTVERMELHO_IDX_MASK, 10);
 	pio_set_debounce_filter(BUTAZUL_PIO, BUTAZUL_IDX_MASK, 10);
-	
-	
 
-	// configura NVIC para receber interrupcoes do PIO do botão 1
-	// configura interrupção no pino referente ao botão 2
 	pio_handler_set(BUT_PIO, BUT_PIO_ID, BUT_IDX_MASK, PIO_IT_RISE_EDGE, but1_callback);
-
-	// habilita interrupção
 	pio_enable_interrupt(BUT_PIO, BUT_IDX_MASK);
-	// limpa interrupção
 	pio_get_interrupt_status(BUT_PIO);
-	
 	NVIC_EnableIRQ(BUT_PIO_ID);
 	NVIC_SetPriority(BUT_PIO_ID, 4);
 	
-	
-	// configura interrupção no pino referente ao botão 2
 	pio_handler_set(BUTVERMELHO_PIO, BUTVERMELHO_PIO_ID, BUTVERMELHO_IDX_MASK, PIO_IT_RISE_EDGE, but2_callback);
-	
-	
-	// habilita interrupção
 	pio_enable_interrupt(BUTVERMELHO_PIO, BUTVERMELHO_IDX_MASK);
-	
-	// limpa interrupção
 	pio_get_interrupt_status(BUTVERMELHO_PIO);
-	
-	// configura NVIC para receber interrupcoes do PIO do botão 2
 	NVIC_EnableIRQ(BUTVERMELHO_PIO_ID);
 	NVIC_SetPriority(BUTVERMELHO_PIO_ID, 4);
 	
-	// configura interrupção no pino referente ao botão 3
 	pio_handler_set(BUTAMARELO_PIO, BUTAMARELO_PIO_ID, BUTAMARELO_IDX_MASK, PIO_IT_RISE_EDGE, but3_callback);
-
-	// habilita interrupção
 	pio_enable_interrupt(BUTAMARELO_PIO, BUTAMARELO_IDX_MASK);
-	// limpa interrupção
 	pio_get_interrupt_status(BUTAMARELO_PIO);
-
-	// configura NVIC para receber interrupcoes do PIO do botão 3
 	NVIC_EnableIRQ(BUTAMARELO_PIO_ID);
 	NVIC_SetPriority(BUTAMARELO_PIO_ID, 4);
 	
-	// configura interrupção no pino referente ao botão 3
 	pio_handler_set(BUTAZUL_PIO, BUTAZUL_PIO_ID, BUTAZUL_IDX_MASK, PIO_IT_RISE_EDGE, but4_callback);
-
-	// habilita interrupção
 	pio_enable_interrupt(BUTAZUL_PIO, BUTAZUL_IDX_MASK);
-	// limpa interrupção
 	pio_get_interrupt_status(BUTAZUL_PIO);
-
-	// configura NVIC para receber interrupcoes do PIO do botão 3
 	NVIC_EnableIRQ(BUTAZUL_PIO_ID);
 	NVIC_SetPriority(BUTAZUL_PIO_ID, 4);
-	
-	/*
-	// configura o botão sw como entrada com pull-up e debounce
-	pmc_enable_periph_clk(SW_PIO_ID);
-	pio_set_input(SW_PIO, SW_PIO_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
-	pio_set_debounce_filter(SW_PIO, SW_PIO_IDX_MASK, 10);
-
-	// configura interrupção no pino referente ao botão sw
-	pio_handler_set(SW_PIO, SW_PIO_ID, SW_PIO_IDX_MASK, PIO_IT_EDGE, sw_callback);
-
-	// habilita interrupção
-	pio_enable_interrupt(SW_PIO, SW_PIO_IDX_MASK);
-	// limpa interrupção
-	pio_get_interrupt_status(SW_PIO);
-	*/
-	/*
-	// configura NVIC para receber interrupcoes do PIO do botão sw
-	NVIC_EnableIRQ(SW_PIO_ID);
-	NVIC_SetPriority(SW_PIO_ID, 4);
-
-	// configura o pino do dt como entrada 
-	pmc_enable_periph_clk(DT_PIO_ID);
-	pio_set_input(DT_PIO, DT_PIO_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
-	pio_set_debounce_filter(DT_PIO, DT_PIO_IDX_MASK, 60);
-
-	// configura o pino do clk como entrada
-	pmc_enable_periph_clk(CLK_PIO_ID);
-	pio_set_input(CLK_PIO, CLK_PIO_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
-	pio_set_debounce_filter(CLK_PIO, CLK_PIO_IDX_MASK, 60);
-
-	// configura interrupção no pino referente ao dt
-	pio_handler_set(DT_PIO, DT_PIO_ID, DT_PIO_IDX_MASK, PIO_IT_EDGE, dt_callback);
-
-	// habilita interrupção
-	pio_enable_interrupt(DT_PIO, DT_PIO_IDX_MASK);
-	// limpa interrupção
-	pio_get_interrupt_status(DT_PIO);
-
-	// configura NVIC para receber interrupcoes do PIO do dt
-	NVIC_EnableIRQ(DT_PIO_ID);
-	NVIC_SetPriority(DT_PIO_ID, 2);
-
-	// configura interrupção no pino referente ao clk
-	pio_handler_set(CLK_PIO, CLK_PIO_ID, CLK_PIO_IDX_MASK, PIO_IT_EDGE, clk_callback);
-
-	// habilita interrupção
-	pio_enable_interrupt(CLK_PIO, CLK_PIO_IDX_MASK);
-	// limpa interrupção
-	pio_get_interrupt_status(CLK_PIO);
-
-	// configura NVIC para receber interrupcoes do PIO do clk
-	NVIC_EnableIRQ(CLK_PIO_ID);
-	NVIC_SetPriority(CLK_PIO_ID, 2);
-	*/
 }
 
 static void configure_console(void) {
@@ -559,10 +299,8 @@ static void configure_console(void) {
 		.stopbits = CONF_UART_STOP_BITS,
 		#endif
 	};
-
 	/* Configure console UART. */
 	stdio_serial_init(CONF_UART, &uart_serial_options);
-
 	/* Specify that stdout should not be buffered. */
 	#if defined(__GNUC__)
 	setbuf(stdout, NULL);
@@ -628,7 +366,6 @@ void config_usart0(void) {
 int hc05_init(void) {
 	char buffer_rx[128];
 	usart_send_command(USART_COM, buffer_rx, 1000, "AT", 100);
-	
 	vTaskDelay( 500 / portTICK_PERIOD_MS);
 	usart_send_command(USART_COM, buffer_rx, 1000, "AT", 100);
 	vTaskDelay( 500 / portTICK_PERIOD_MS);
@@ -638,10 +375,6 @@ int hc05_init(void) {
 	vTaskDelay( 500 / portTICK_PERIOD_MS);
 	usart_send_command(USART_COM, buffer_rx, 1000, "AT+PIN0000", 100);
 }
-
-/************************************************************************/
-/* TASKS                                                                */
-/************************************************************************/
 
 void task_bluetooth(void) {
 	printf("Task Bluetooth started \n");
@@ -699,16 +432,9 @@ void task_bluetooth(void) {
 			usart_write(USART_COM, eof);
 
 			// dorme por 500 ms
-		vTaskDelay(500 / portTICK_PERIOD_MS);
-		
-	
-		
+		vTaskDelay(500 / portTICK_PERIOD_MS);	
 	}
 }
-
-/************************************************************************/
-/* main                                                                 */
-/************************************************************************/
 
 int main(void) {
 	/* Initialize the SAM system */

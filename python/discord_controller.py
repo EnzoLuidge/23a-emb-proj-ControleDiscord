@@ -55,7 +55,7 @@ class SerialControllerInterface:
 
         elif data == b'3': # decline call
             logging.info("Sending press")
-            pyautogui.hotkey('escape')
+            pyautogui.hotkey('ctrl', 'shift', 'N')
 
         elif data == b'4':
             logging.info("Sending press") # ansewer call
@@ -73,7 +73,6 @@ class SerialControllerInterface:
             if self.currentVolumeDb >= -5:
                 self.currentVolumeDb = -6
             volume.SetMasterVolumeLevel(self.currentVolumeDb + 5, None)
-
 
         elif data == b'7':
             logging.info("Sending press")
@@ -99,7 +98,6 @@ class DummyControllerInterface:
         pyautogui.keyUp(self.mapping.button['A'])
         logging.info("[Dummy] Pressed A button")
         time.sleep(1)
-
 
 if __name__ == '__main__':
     interfaces = ['dummy', 'serial']
