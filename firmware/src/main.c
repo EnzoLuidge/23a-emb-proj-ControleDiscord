@@ -241,8 +241,9 @@ static void task_adc(void *pvParameters) {
 
   while (1) {
     if (xQueueReceive(xQueueADC, &(adc), 1000)) {
-      // //printf("ADC: %d \n", adc);
-	  if (adc.value - 50 > lastadc.value) {
+      //printf("ADC: %d \n", adc);
+	  //printf("LastADC: %d \n", lastadc);
+	  if (adc.value - 50 > lastadc.value && adc.value > 50) {
 		//printf("Subindo \n");
 		button1 = '6';
 		// enviar para a fila

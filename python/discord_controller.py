@@ -45,20 +45,20 @@ class SerialControllerInterface:
         data = self.ser.read()
         logging.debug("Received DATA: {}".format(data))
 
-        if data == b'1':
+        if data == b'1': # Mute
             logging.info("Sending press")
             pyautogui.hotkey('ctrl', 'shift', 'M')
 
-        elif data == b'2':
+        elif data == b'2': # Deafen
             logging.info("Sending press")
             pyautogui.hotkey('ctrl', 'shift', 'D')
 
-        elif data == b'3':
+        elif data == b'3': # decline call
             logging.info("Sending press")
             pyautogui.hotkey('escape')
 
         elif data == b'4':
-            logging.info("Sending press")
+            logging.info("Sending press") # ansewer call
             pyautogui.hotkey('ctrl', 'enter')
 
         elif data == b'5':
@@ -69,20 +69,20 @@ class SerialControllerInterface:
             logging.info("Sending press")
             # aumentar volume
             self.currentVolumeDb = volume.GetMasterVolumeLevel()
-            if self.currentVolumeDb + self.currentVolumeDb*0.3 > 0:
-                self.currentVolumeDb = 0
             print(self.currentVolumeDb)
-            volume.SetMasterVolumeLevel(self.currentVolumeDb + self.currentVolumeDb*0.3, None)
+            if self.currentVolumeDb >= -5:
+                self.currentVolumeDb = -6
+            volume.SetMasterVolumeLevel(self.currentVolumeDb + 5, None)
+
 
         elif data == b'7':
             logging.info("Sending press")
             # diminuir volume
             self.currentVolumeDb = volume.GetMasterVolumeLevel()
             print(self.currentVolumeDb)
-            if self.currentVolumeDb - self.currentVolumeDb*0.3 < -50:
-                self.currentVolumeDb = -50
-            volume.SetMasterVolumeLevel(self.currentVolumeDb - self.currentVolumeDb*0.3, None)
-
+            if self.currentVolumeDb <= -45:
+                self.currentVolumeDb = -44
+            volume.SetMasterVolumeLevel(self.currentVolumeDb - 5, None)
         elif data == b'0':
             logging.info("Sending release")
 
